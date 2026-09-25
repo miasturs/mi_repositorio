@@ -1,98 +1,63 @@
-Stack de desarrollo — App móvil de gestión de citas médicas
+# App de Gestión de Citas Médicas — Análisis de Stack Tecnológico
 
-Objetivo
+## Resumen de la decisión
 
-Análisis técnico para seleccionar un stack multiplataforma para Android e iOS.
+| Capa | Tecnología seleccionada |
+|---|---|
+| Framework / lenguaje | Flutter 3.44+ / Dart 3.12+ |
+| Gestión de estado | Riverpod |
+| Backend y notificaciones | Firebase (Authentication y Cloud Messaging) o API REST propia |
+| Almacenamiento offline | Drift (SQLite) cifrado con SQLCipher |
+| Escaneo QR | `mobile_scanner` |
+| Biometría | `local_auth` |
+| Calendario del dispositivo | `device_calendar` (opcional) |
+| Entorno de desarrollo | VS Code (extensiones Flutter y Dart) + Android Studio (SDK/emulador) + Xcode (build iOS) |
+| Integración continua | Codemagic o GitHub Actions + Fastlane |
 
-Stack recomendado
+**¿Por qué Flutter?** Para una app de salud, la consistencia visual entre Android e iOS y un único
+equipo/base de código pesan más que la ganancia marginal de rendimiento de Kotlin Multiplatform o la
+familiaridad JS de React Native. Flutter ofrece rendimiento cercano al nativo, paquetes maduros para
+cámara/push/almacenamiento cifrado/biometría, y precedentes en sectores regulados (Google Pay, Nubank).
+Detalles y alternativas según contexto de equipo en el PDF.
 
-Framework: Flutter
+## Arquitectura por capas
 
-Lenguaje: Dart
-
-IDE: Android Studio Quail 4 2026.1.4 Patch 1
-
-Estado: Riverpod (propuesto)
-
-API: REST/JSON
-
-Persistencia: SQLite/Drift o sqflite
-
-Push: Firebase Cloud Messaging
-
-QR/cámara: plugin de cámara/QR
-
-Pruebas: flutter_test + integration_test
-
-Comparativa
-
-Se compararon Flutter, React Native con Expo y Kotlin Multiplatform considerando lenguaje, rendimiento, curva de aprendizaje, comunidad y ejemplos reales.
-
-Flutter
-
-Una base de código para Android/iOS, UI consistente y ecosistema maduro.
-
-React Native + Expo
-
-Alternativa especialmente conveniente para equipos con experiencia en React y TypeScript. Expo tiene soporte de primera clase para TypeScript.
-
-Kotlin Multiplatform
-
-Permite compartir lógica y, con Compose Multiplatform, también UI. Es apropiado cuando se busca conservar una integración cercana a lo nativo.
-
-Hardware
-
-Cámara: QR.
-
-Notificaciones push: recordatorios y cambios.
-
-Almacenamiento local: historial mínimo y sincronización offline.
-
-Red: sincronización con el backend.
-
-GPS/Bluetooth/NFC: no son necesarios para el alcance actual.
-
-Entorno
-
-Instalar Android Studio Quail 4 2026.1.4 Patch 1.
-
-Configurar Android SDK, Platform Tools y Emulator.
-
-Instalar Flutter SDK.
-
-Instalar plugin Flutter (Dart como dependencia).
-
-Ejecutar flutter doctor.
-
-Crear un emulador Android.
-
-Para iOS se requiere macOS + Xcode.
-
-Estructura sugerida
-
+```
 lib/
-  core/
-  data/
-  domain/
-  presentation/
-  features/
-    auth/
-    appointments/
-    history/
-    profile/
+├── presentation/   # Pantallas y widgets (agenda, detalle de cita, historial, perfil)
+├── application/    # Providers Riverpod: sesión, agenda, sincronización offline/online
+├── data/           # Drift (SQLite local cifrado) + cliente Firebase/API REST remota
+└── services/       # Envoltorios de cámara (QR), notificaciones push y biometría
+```
 
-Fuentes
+## Hardware y permisos requeridos
 
-Flutter: https://docs.flutter.dev/reference/supported-platforms
+| Función | Paquete | Permiso |
+|---|---|---|
+| Escaneo de QR (check-in, receta, identificador de paciente) | `mobile_scanner` | Cámara |
+| Recordatorios y cambios de cita | `firebase_messaging` + `flutter_local_notifications` | Notificaciones |
+| Historial offline | `drift` + `sqlcipher_flutter_libs` | Almacenamiento cifrado |
+| Acceso seguro a datos médicos | `local_auth` | Biometría (huella / Face ID), con respaldo de PIN |
 
-Android Studio: https://developer.android.com/studio/releases
+## Configuración del entorno de desarrollo
 
-Android updates: https://developer.android.com/latest-updates/
+1. Instalar el Flutter SDK 3.44+ y agregar `flutter/bin` al `PATH`.
+2. Ejecutar `flutter doctor` y resolver cualquier dependencia faltante.
+3. Instalar Android Studio (última versión estable, serie 2026.1.x) para el SDK de Android, Platform
+   Tools y el AVD Manager.
+4. En macOS, instalar Xcode para compilar y firmar la app iOS (Flutter 3.44+ usa Swift Package Manager
+   por defecto).
+5. Instalar VS Code con las extensiones **Flutter** y **Dart**.
+6. Configurar un emulador Android y, en macOS, un simulador iOS.
+7. Verificar `flutter doctor -v` sin errores antes de comenzar.
 
-Expo TypeScript: https://docs.expo.dev/guides/typescript/
+> Nota: este repositorio no incluye capturas de pantalla de la instalación. Agrega las tuyas en una
+> carpeta `docs/screenshots/` y enlázalas aquí para completar la evidencia de configuración.
 
-Expo New Architecture: https://docs.expo.dev/guides/new-architecture/
+## Seguridad y cumplimiento
 
-Kotlin Multiplatform: https://kotlinlang.org/docs/multiplatform/kmp-overview.html
-
-KMP examples: https://kotlinlang.org/docs/cross-platform-mobile-development.html
+- Cifrado en reposo (SQLCipher) y en tránsito (TLS) para todo dato clínico.
+- Autenticación biométrica con respaldo de PIN y cierre de sesión por inactividad.
+- Minimización de datos offline: solo el historial necesario, no el expediente clínico completo.
+- Validar el marco regulatorio de datos de salud del país de despliegue (equivalentes locales a
+  HIPAA/GDPR) antes de definir la política de retención.
