@@ -51,9 +51,6 @@ lib/
 6. Configurar un emulador Android y, en macOS, un simulador iOS.
 7. Verificar `flutter doctor -v` sin errores antes de comenzar.
 
-> Nota: este repositorio no incluye capturas de pantalla de la instalación. Agrega las tuyas en una
-> carpeta `docs/screenshots/` y enlázalas aquí para completar la evidencia de configuración.
-
 ## Seguridad y cumplimiento
 
 - Cifrado en reposo (SQLCipher) y en tránsito (TLS) para todo dato clínico.
